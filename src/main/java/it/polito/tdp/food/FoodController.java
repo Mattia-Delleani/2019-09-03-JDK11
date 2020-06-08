@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 import it.polito.tdp.food.model.Model;
+import it.polito.tdp.food.model.PorzioneAdiacente;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -48,58 +49,69 @@ public class FoodController {
 
     @FXML
     void doCammino(ActionEvent event) {
-    	txtResult.clear();
-    	int n = -1;
+    	
+    	String porzione = boxPorzioni.getValue() ;
+    	
+    	if(porzione==null) {
+    		txtResult.appendText("ERRORE: devi selezionare una porzione\n");
+    		return ;
+    	}
+
+    	Integer N ;
     	try {
-    		
-    		n = Integer.parseInt(txtPassi.getText());
-    		
-    	}catch(NumberFormatException nfe) {
-    		txtResult.appendText("Inserire un numero");
+    		N = Integer.parseInt(txtPassi.getText()) ;
+    	} catch(NumberFormatException ex) {
+    		txtResult.appendText("ERRORE: il valore "+txtPassi.getText()+" non è un numero intero\n");
+    		return ;
     	}
-    	txtResult.appendText("Cammino massimo partendo da "+ boxPorzioni.getValue()+ " con "+ n+ " passi:");
-    	List<String> result = this.model.cercaCammino(boxPorzioni.getValue(), n);
-    	for(String s: result) {
-    		txtResult.appendText("\n"+s);
-    		
+    	
+    	model.cercaCammino(porzione, N);
+    	if(model.getCamminoMax()==null) {
+    		txtResult.appendText("Non ho trovato un cammino di lunghezza N\n");
+    	} else {
+    		txtResult.appendText("Trovato un cammino di peso "+model.getPesoMax()+"\n");
+    		for(String vertice : model.getCamminoMax()) {
+    			txtResult.appendText(vertice+"\n");
+    		}
     	}
-    	txtResult.appendText("\nCon peso massimo: "+ this.model.getPesoBest());
     	
     	
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Porzioni corrlate:\n"+ this.model.componentiConnesse(boxPorzioni.getValue()));
+
+    	String porzione = boxPorzioni.getValue() ;
+    	
+    	if(porzione==null) {
+    		txtResult.appendText("ERRORE: devi selezionare una porzione\n");
+    		return ;
+    	}
+    	
+    	txtResult.appendText("Porzioni correlate a: "+porzione+"\n");
+    	List<PorzioneAdiacente> adiacenti = model.getAdiacenti(porzione);
+    	for(PorzioneAdiacente pa : adiacenti) {
+    		txtResult.appendText(String.format("%s %f\n", pa.getPorzione(), pa.getPeso()));
+    	}
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-    	txtResult.clear();
-    	
-    	int calorie = -1;
-    	
+    	String cs = txtCalorie.getText();
+    	Integer C ;
     	try {
-    		
-    		calorie = Integer.parseInt(txtCalorie.getText());
-    		
-    	}catch(NumberFormatException nfe) {
-    		txtResult.appendText("Inserire un numero");
+    		C = Integer.parseInt(cs) ;
+    	} catch (NumberFormatException ex) {
+    		txtResult.appendText("ERRORE: il valore "+cs+" non è un valido numero intero\n");
+    		return ;
     	}
     	
-    	if(calorie <0) {
-    		
-    		txtResult.appendText("Inserire un numero maggiore di zero");
-    	}else {
-    		
-    		this.model.creaGrafo(calorie);
-    		txtResult.appendText("Grafo creato con "+ this.model.getVertici().size() + " vertici e "+ this.model.getArchi().size());
-    		boxPorzioni.getItems().addAll(this.model.getVertici());
-    		btnCorrelate.setDisable(false);
-    	}
+    	String msg = model.creaGrafo(C);
+    	txtResult.appendText(msg);
     	
+    	boxPorzioni.getItems().clear();
+    	boxPorzioni.getItems().addAll(model.getVerticiGrafo()) ;
     	
     }
 
@@ -117,10 +129,5 @@ public class FoodController {
     
     public void setModel(Model model) {
     	this.model = model;
-    	
-    	btnCorrelate.setDisable(true);
-    	
-    	
-    	
     }
 }

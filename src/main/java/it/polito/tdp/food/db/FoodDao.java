@@ -6,14 +6,76 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import it.polito.tdp.food.model.Arco;
 import it.polito.tdp.food.model.Condiment;
 import it.polito.tdp.food.model.Food;
+import it.polito.tdp.food.model.InfoArco;
 import it.polito.tdp.food.model.Portion;
 
 public class FoodDao {
+	
+	public List<String> getPortionDisplayNames(int C) {
+		String sql = "SELECT DISTINCT portion_display_name " + 
+				"FROM `portion` " + 
+				"WHERE calories<? " + 
+				"ORDER BY portion_display_name" ;
+		
+		try {
+			Connection conn = DBConnect.getConnection() ;
+
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			
+			st.setInt(1, C);
+			
+			ResultSet res = st.executeQuery() ;
+			
+			List<String> result = new ArrayList<>() ;
+			
+			while(res.next()) {
+				result.add( res.getString("portion_display_name"));
+			}
+			
+			conn.close();
+			return result ;
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null ;
+		}
+		
+	}
+	
+	public List<InfoArco> getTuttiGliArchi() {
+		String sql = "SELECT P1.portion_display_name AS NAME1, P2.portion_display_name AS NAME2, COUNT(DISTINCT P1.food_code) AS CNT " + 
+				"FROM `portion` P1, `portion` P2 " + 
+				"WHERE P1.food_code=P2.food_code " + 
+				"AND P1.portion_id<>P2.portion_id " + 
+				"GROUP BY P1.portion_display_name, P2.portion_display_name" ;
+		
+		try {
+			Connection conn = DBConnect.getConnection() ;
+
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			
+			ResultSet res = st.executeQuery() ;
+			
+			List<InfoArco> result = new ArrayList<>() ;
+			while(res.next()) {
+				result.add( new InfoArco(
+						res.getString("NAME1"), 
+						res.getString("NAME2"), 
+						res.getInt("CNT"))) ;
+			}
+			
+			conn.close() ;
+			return result ;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null; 
+		}
+	}
+	
 	public List<Food> listAllFoods(){
 		String sql = "SELECT * FROM food" ;
 		try {
@@ -111,79 +173,6 @@ public class FoodDao {
 		}
 
 	}
-	
-	
-	public List<String> listAllPortionsName(int calories){
-		String sql = "SELECT * " + 
-				"FROM `portion` " + 
-				"WHERE calories < ? " + 
-				"GROUP BY portion_display_name" ;
-		try {
-			Connection conn = DBConnect.getConnection() ;
-
-			PreparedStatement st = conn.prepareStatement(sql) ;
-			st.setInt(1, calories);
-			
-			List<String> list = new ArrayList<>() ;
-			
-			ResultSet res = st.executeQuery() ;
-			
-			while(res.next()) {
-				try {
-					list.add(res.getString("portion_display_name"));
-				} catch (Throwable t) {
-					t.printStackTrace();
-				}
-			}
-			
-			conn.close();
-			return list ;
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null ;
-		}
-
-	}
-	
-	public List<Arco> listOfEdges(List<String> vertici){
-		String sql = "SELECT p1.portion_display_name AS nome1, p2.portion_display_name AS nome2, COUNT(DISTINCT p1.food_code) AS peso " + 
-				"FROM `portion` p1, `portion` p2 " + 
-				"WHERE p1.food_code=p2.food_code AND p1.portion_display_name > p2.portion_display_name " + 
-				"GROUP BY p1.portion_display_name, p2.portion_display_name" ;
-		try {
-			Connection conn = DBConnect.getConnection() ;
-
-			PreparedStatement st = conn.prepareStatement(sql) ;
-			
-			List<Arco> list = new ArrayList<>() ;
-			
-			ResultSet res = st.executeQuery() ;
-			
-			while(res.next()) {
-				try {
-					
-					if(vertici.contains(res.getString("nome1")) && vertici.contains(res.getString("nome1"))) {
-						Arco a = new Arco(res.getString("nome1"), res.getString("nome2"), res.getInt("peso"));
-						list.add(a);
-					}
-					
-				} catch (Throwable t) {
-					t.printStackTrace();
-				}
-			}
-			
-			conn.close();
-			return list ;
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null ;
-		}
-
-	}
-	
-	
 	
 	
 
