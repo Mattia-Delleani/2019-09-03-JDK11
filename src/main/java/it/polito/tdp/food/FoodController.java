@@ -5,6 +5,7 @@
 package it.polito.tdp.food;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import it.polito.tdp.food.model.Model;
 import javafx.event.ActionEvent;
@@ -40,7 +41,7 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<?> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
@@ -48,20 +49,57 @@ public class FoodController {
     @FXML
     void doCammino(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco cammino peso massimo...");
+    	int n = -1;
+    	try {
+    		
+    		n = Integer.parseInt(txtPassi.getText());
+    		
+    	}catch(NumberFormatException nfe) {
+    		txtResult.appendText("Inserire un numero");
+    	}
+    	txtResult.appendText("Cammino massimo partendo da "+ boxPorzioni.getValue()+ " con "+ n+ " passi:");
+    	List<String> result = this.model.cercaCammino(boxPorzioni.getValue(), n);
+    	for(String s: result) {
+    		txtResult.appendText("\n"+s);
+    		
+    	}
+    	txtResult.appendText("\nCon peso massimo: "+ this.model.getPesoBest());
+    	
+    	
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco porzioni correlate...");
+    	txtResult.appendText("Porzioni corrlate:\n"+ this.model.componentiConnesse(boxPorzioni.getValue()));
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
+    	
+    	int calorie = -1;
+    	
+    	try {
+    		
+    		calorie = Integer.parseInt(txtCalorie.getText());
+    		
+    	}catch(NumberFormatException nfe) {
+    		txtResult.appendText("Inserire un numero");
+    	}
+    	
+    	if(calorie <0) {
+    		
+    		txtResult.appendText("Inserire un numero maggiore di zero");
+    	}else {
+    		
+    		this.model.creaGrafo(calorie);
+    		txtResult.appendText("Grafo creato con "+ this.model.getVertici().size() + " vertici e "+ this.model.getArchi().size());
+    		boxPorzioni.getItems().addAll(this.model.getVertici());
+    		btnCorrelate.setDisable(false);
+    	}
+    	
     	
     }
 
@@ -79,5 +117,10 @@ public class FoodController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	btnCorrelate.setDisable(true);
+    	
+    	
+    	
     }
 }
