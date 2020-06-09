@@ -116,7 +116,7 @@ public class FoodDao {
 	public List<String> listAllPortionsName(int calories){
 		String sql = "SELECT * " + 
 				"FROM `portion` " + 
-				"WHERE calories < ? " + 
+				"WHERE calories <= ? " + 
 				"GROUP BY portion_display_name" ;
 		try {
 			Connection conn = DBConnect.getConnection() ;

@@ -41,7 +41,11 @@ public class Model {
 		
 		for(Arco a: archi) {
 			
-			Graphs.addEdgeWithVertices(this.grafo, a.getNome1(), a.getNome2(), a.getPeso());
+			if(this.grafo.containsVertex(a.getNome1())&& this.grafo.containsVertex(a.getNome2())) {
+			
+				
+				Graphs.addEdgeWithVertices(this.grafo, a.getNome1(), a.getNome2(), a.getPeso());
+			}
 			
 		}
 		
@@ -71,7 +75,7 @@ public class Model {
 		pesoBest = 0;
 		parziale.add(origine);
 		livelloMax= n;
-		cercaRicorsivo(parziale, 0);
+		cercaRicorsivo(parziale);
 		
 		return bestSoluzione;
 		
@@ -79,30 +83,40 @@ public class Model {
 	
 	
 	
-	private void cercaRicorsivo(List<String> parziale, int peso) {
+	private void cercaRicorsivo(List<String> parziale) {
 		
-		if(parziale.size()==livelloMax) {
+		if(parziale.size()==livelloMax+1) {
+			int peso = pesoCammino(parziale);
 			if(peso> pesoBest) {
 				pesoBest = peso;
 				bestSoluzione = new ArrayList<>(parziale);
 			}
+			return;
 		}
 		for(String vicino: Graphs.neighborListOf(this.grafo, parziale.get(parziale.size()-1))) {
 			
 			if(!parziale.contains(vicino)) {
-				
-				DefaultWeightedEdge e =  this.grafo.getEdge(parziale.get(parziale.size()-1), vicino);
 				parziale.add(vicino);
-				peso+=(int) this.grafo.getEdgeWeight(e);
-				cercaRicorsivo(parziale, peso);
-				
-				parziale.remove(vicino);
+				cercaRicorsivo(parziale);
+	
+				parziale.remove(parziale.size()-1);
 			}
 		}
 			
 	
 		
 	}
+	
+
+	private int pesoCammino(List<String> parziale) {
+		int peso = 0 ;
+		for(int i=1; i<parziale.size(); i++) {
+			int p = (int) this.grafo.getEdgeWeight(this.grafo.getEdge(parziale.get(i-1), parziale.get(i))) ;
+			peso += p ;
+		}
+		return peso ;
+	}
+	
 
 	public Set<String> getVertici() {
 		return this.grafo.vertexSet();
